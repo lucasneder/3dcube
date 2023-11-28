@@ -1,12 +1,18 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
+import gsap from 'gsap'
 
 /**
  * Debug
  */
 
-const gui = new dat.GUI()
+const gui = new dat.GUI({
+    width: 300,
+    title: 'Nice debug UI',
+    closeFolders: true
+})
+const debugObject = {}
 
 /**
  * Base
@@ -69,11 +75,59 @@ const scene = new THREE.Scene()
 
 
 // Object
-const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1, 5, 5, 5),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-)
+debugObject.color = '#01fe62'
+const material = new THREE.MeshBasicMaterial({ color: debugObject.color })
+const geometry =  new THREE.BoxGeometry(1, 1, 1, 5, 5, 5)
+const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
+
+const cubeTweaks = gui.addFolder('Awesome cube')
+
+cubeTweaks
+    .add(mesh.position, 'y')
+    // ...
+
+cubeTweaks
+    .add(mesh, 'visible')
+
+
+gui
+    .add(mesh.position, 'y')
+    .min(- 3)
+    .max(3)
+    .step(0.01)
+    .name('elevation')
+
+gui
+   .add(mesh, 'visible')
+   
+gui
+   .add(material, 'wireframe')
+gui
+   .addColor(debugObject, 'color')
+   .onChange(()=>{
+     material.color.set(debugObject.color)
+   })
+   
+debugObject.spin = () =>{
+    gsap.to(mesh.rotation, {y: mesh.rotation.y + Math.PI * 2})
+}
+gui.add(debugObject, 'spin')
+
+debugObject.subdivision = 2
+gui
+    .add(debugObject, 'subdivision')
+    .min(1)
+    .max(20)
+    .step(1)
+    .onFinishChange(() =>
+    {
+        mesh.geometry.dispose()
+        mesh.geometry = new THREE.BoxGeometry(
+            1, 1, 1,
+            debugObject.subdivision, debugObject.subdivision, debugObject.subdivision
+        )
+    })
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height)
